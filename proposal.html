@@ -331,6 +331,31 @@
             text-decoration: underline;
         }
 
+        .pdf-download-btn {
+            background: linear-gradient(135deg, var(--secondary-color), #f0d84a);
+            color: var(--primary-color);
+            border: none;
+            padding: 15px 30px;
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            margin-top: 25px;
+            border: 2px solid var(--primary-color);
+        }
+
+        .pdf-download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+            background: linear-gradient(135deg, #f0d84a, var(--secondary-color));
+        }
+
+        .pdf-download-btn:active {
+            transform: translateY(0);
+        }
+
         .demo-link {
             display: inline-block;
             background: var(--secondary-color);
@@ -596,7 +621,7 @@
         <div class="contact-info">
             <div class="contact-item">
                 <strong>Contact</strong>
-                Haydn Philip
+                Haydn Watkins
             </div>
             <div class="contact-item">
                 <strong>Website</strong>
@@ -611,6 +636,10 @@
                 <a href="mailto:haydn@multimedium.dev">haydn@multimedium.dev</a>
             </div>
         </div>
+        
+        <button id="downloadPDF" class="pdf-download-btn">
+            📄 Download Proposal PDF
+        </button>
     </div>
 
     <!-- Footer -->
@@ -618,5 +647,112 @@
         <strong>This proposal is valid for 30 days from June 26, 2025.</strong><br>
         Need to brainstorm? Want more samples? I'm here any time!
     </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const downloadButton = document.getElementById('downloadPDF');
+            
+            downloadButton.addEventListener('click', function() {
+                // Change button text to show loading
+                const originalText = downloadButton.innerHTML;
+                downloadButton.innerHTML = '⏳ Generating PDF...';
+                downloadButton.disabled = true;
+                
+                // Hide navigation and footer for cleaner PDF
+                const nav = document.querySelector('.proposal-nav');
+                const downloadBtn = document.getElementById('downloadPDF');
+                const backLink = document.querySelector('.back-link');
+                
+                if (nav) nav.style.display = 'none';
+                if (downloadBtn) downloadBtn.style.display = 'none';
+                if (backLink) backLink.style.display = 'none';
+                
+                // Adjust body for PDF generation
+                const originalBodyStyle = document.body.style.cssText;
+                document.body.style.paddingTop = '0';
+                document.querySelector('.proposal-container').style.paddingTop = '20px';
+                
+                // Generate PDF using html2canvas and jsPDF
+                const element = document.querySelector('.proposal-container');
+                
+                html2canvas(element, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#f8f9fa',
+                    width: element.scrollWidth,
+                    height: element.scrollHeight
+                }).then(function(canvas) {
+                    const imgData = canvas.toDataURL('image/png');
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+                    
+                    const imgWidth = 210;
+                    const pageHeight = 295;
+                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                    let heightLeft = imgHeight;
+                    let position = 0;
+                    
+                    // Add first page
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                    
+                    // Add additional pages if needed
+                    while (heightLeft >= 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
+                    
+                    // Add metadata
+                    pdf.setProperties({
+                        title: 'Crafty Concoctions - Branding & Website Launch Proposal',
+                        subject: 'Website Development Proposal',
+                        author: 'Haydn Watkins - multimedium.dev',
+                        creator: 'multimedium.dev',
+                        producer: 'Haydn Watkins'
+                    });
+                    
+                    // Download the PDF
+                    pdf.save('Crafty-Concoctions-Proposal-June-2025.pdf');
+                    
+                    // Restore original styles
+                    document.body.style.cssText = originalBodyStyle;
+                    document.querySelector('.proposal-container').style.paddingTop = '80px';
+                    if (nav) nav.style.display = 'block';
+                    if (downloadBtn) {
+                        downloadBtn.style.display = 'inline-block';
+                        downloadBtn.innerHTML = originalText;
+                        downloadBtn.disabled = false;
+                    }
+                    if (backLink) backLink.style.display = 'inline-block';
+                    
+                }).catch(function(error) {
+                    console.error('Error generating PDF:', error);
+                    
+                    // Restore button on error
+                    downloadButton.innerHTML = originalText;
+                    downloadButton.disabled = false;
+                    
+                    // Restore styles on error
+                    document.body.style.cssText = originalBodyStyle;
+                    document.querySelector('.proposal-container').style.paddingTop = '80px';
+                    if (nav) nav.style.display = 'block';
+                    if (downloadBtn) downloadBtn.style.display = 'inline-block';
+                    if (backLink) backLink.style.display = 'inline-block';
+                    
+                    alert('Error generating PDF. Please try again or contact support.');
+                });
+            });
+        });
+    </script>
+    <script src="protection.js"></script>
 </body>
 </html>
