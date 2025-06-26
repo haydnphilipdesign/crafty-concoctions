@@ -341,7 +341,7 @@ function handleFormSubmission(formData) {
 // Preload critical images
 function preloadImages() {
     const criticalImages = [
-        'images/hero-mobile-bar.jpg'
+        'images/mobile-bar.jpg'
     ];
     
     criticalImages.forEach(src => {
